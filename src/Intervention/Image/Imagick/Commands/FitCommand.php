@@ -2,10 +2,14 @@
 
 namespace Intervention\Image\Imagick\Commands;
 
+use Intervention\Image\Imagick\Commands\Traits\UsesEntropyTrait;
 use Intervention\Image\Size;
 
 class FitCommand extends \Intervention\Image\Commands\AbstractCommand
 {
+
+    use UsesEntropyTrait;
+
     /**
      * Crops and resized an image at the same time
      *
@@ -20,7 +24,13 @@ class FitCommand extends \Intervention\Image\Commands\AbstractCommand
         $position = $this->argument(3)->type('string')->value('center');
 
         // calculate size
-        $cropped = $image->getSize()->fit(new Size($width, $height), $position);
+        if ($position == 'entropy') {
+            $entropy = $this->getEntropyPoint($image, $width, $height);
+            $cropped = $image->crop($width, $height, $entropy['x'], $entropy['y']);
+        } else {
+            $cropped = $image->getSize()->fit(new Size($width, $height), $position);
+        }
+
         $resized = clone $cropped;
         $resized = $resized->resize($width, $height, $constraints);
 
@@ -38,4 +48,5 @@ class FitCommand extends \Intervention\Image\Commands\AbstractCommand
 
         return true;
     }
+
 }
